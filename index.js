@@ -21,6 +21,8 @@ async function run() {
         const database = client.db('watchFusion');
         const productCollection = database.collection('products');
         const ordersCollection = database.collection('orders');
+        const usersCollection = database.collection('users');
+        const reviewsCollection = database.collection('reviews');
         // PRODUCT RELATED WORKS
         //GET ALL PRODUCTS
         app.get('/products', async (req, res) => {
@@ -76,14 +78,12 @@ async function run() {
             const result = await cursor.toArray();
             res.send(result);
         });
-        app.get('/appointments', async (req, res) => {
+        app.get('/myorders', async (req, res) => {
             const email = req.query.email;
-            console.log(email);
-            // const date = new Date(req.query.date).toLocaleDateString();
-            // const query = { patientEmail: email, date: date };
-            // const cursor = appointmentsCollection.find(query);
-            // const appointments = await cursor.toArray();
-            res.json(appointments);
+            const query = { email: email };
+            const cursor = ordersCollection.find(query);
+            const result = await cursor.toArray();
+            res.json(result);
         });
         //ADD NEW ORDER
         app.post('/orders', async (req, res) => {
@@ -114,7 +114,61 @@ async function run() {
             };
             const result = await ordersCollection.updateOne(filter, updateDoc, options)
             res.json(result);
+        });
+
+        //USERS WORKS
+        //ADD NEW USER
+        app.post('/users', async (req, res) => {
+            const user = req.body;
+            const result = await usersCollection.insertOne(user);
+            res.json(result);
         })
+        //USER ADD FOR DIRECT GOOGLE LOGIN
+        app.put('/users', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const options = { upsert: true };
+            const updateDoc = {
+                $set: user
+            }
+            const result = await usersCollection.updateOne(filter, updateDoc, options);
+            res.json(result);
+        })
+        //CHECKING IF THE USER IS ADMIN
+        app.get('/users/:email', async (req, res) => {
+            const email = req.params.email;
+            const query = { email: email };
+            const user = await usersCollection.findOne(query);
+            let isAdmin = false;
+            if (user?.role === 'admin') {
+                isAdmin = true;
+            }
+            res.json({ admin: isAdmin });
+        });
+        //MAKING AN USER ADMIN
+        app.put('/users/admin', async (req, res) => {
+            const user = req.body;
+            const filter = { email: user.email };
+            const updateDoc = { $set: { role: 'admin' } };
+            const result = await usersCollection.updateOne(filter, updateDoc);
+            res.json(result);
+        });
+        //REVIEW RELATED WORKS
+        //GET ALL REVIEW
+        app.get('/reviews', async (req, res) => {
+            const cursor = reviewsCollection.find({});
+            const result = await cursor.toArray();
+            res.send(result);
+        });
+        //ADD NEW REVIEW
+        app.post('/reviews', async (req, res) => {
+            const review = req.body;
+            review.date = new Date().toLocaleDateString();
+            const result = await reviewsCollection.insertOne(review);
+            res.json(result);
+        })
+
+
 
 
     }
