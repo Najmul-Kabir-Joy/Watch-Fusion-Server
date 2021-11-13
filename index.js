@@ -95,11 +95,18 @@ async function run() {
             res.json(result);
         });
 
-        //WORK FOR ORDERS
-        app.get('/orders', async (req, res) => {
-            const cursor = ordersCollection.find({});
-            const result = await cursor.toArray();
-            res.send(result);
+        app.get('/orders', verifyToken, async (req, res) => {
+            const requester = req.decodedEmail;
+            if (requester) {
+                const requesterAcc = await usersCollection.findOne({ email: requester });
+                if (requesterAcc.role === 'admin') {
+                    const cursor = ordersCollection.find({});
+                    const result = await cursor.toArray();
+                    res.send(result);
+                }
+            } else {
+                res.status(403).json({ message: 'FORBIDDENN' });
+            }
         });
 
         app.get('/myorders', verifyToken, async (req, res) => {
