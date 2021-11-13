@@ -97,11 +97,12 @@ async function run() {
 
         app.get('/orders', verifyToken, async (req, res) => {
             const requester = req.decodedEmail;
-            const cursor = ordersCollection.find({});
-            const result = await cursor.toArray();
+
             if (requester) {
                 const requesterAcc = await usersCollection.findOne({ email: requester });
                 if (requesterAcc.role === 'admin') {
+                    const cursor = ordersCollection.find({});
+                    const result = await cursor.toArray();
                     res.send(result);
                 }
             } else {
