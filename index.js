@@ -206,6 +206,13 @@ async function run() {
             const result = await reviewsCollection.insertOne(review);
             res.json(result);
         })
+        //DELETE A REVIEW
+        app.delete('/reviews/:id', async (req, res) => {
+            const id = req.params.id;
+            const query = { _id: ObjectId(id) };
+            const result = await reviewsCollection.deleteOne(query);
+            res.json(result);
+        });
 
         /* //MERCHANT REQUEST
         app.get('/merchant', async (req, res) => {
